@@ -11,11 +11,11 @@ builder.Services.AddHangfire(config => config
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UseSQLiteStorage("Data Source=Hangfire.db;"));
+    .UseSQLiteStorage("Hangfire.db"));
 builder.Services.AddHangfireServer();
 
 builder.Services.AddControllers();
-
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddTransient<IJobService, JobService>();
 
 var app = builder.Build();
@@ -30,6 +30,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseRouting();
 app.UseEndpoints(endpoints => {
     _ = endpoints.MapControllers();
 });
