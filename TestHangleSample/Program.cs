@@ -1,5 +1,6 @@
 using Hangfire;
 using Hangfire.Storage.SQLite;
+using Microsoft.AspNetCore.Mvc;
 using Scalar.AspNetCore;
 using TestHangleSample.Services;
 
@@ -31,8 +32,30 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
-app.UseEndpoints(endpoints => {
+app.UseEndpoints(endpoints =>
+{
     _ = endpoints.MapControllers();
+});
+
+app.MapGet("/start-jobs", (
+    [FromServices] ILogger<Program> logger,
+    [FromServices] IJobService jobService,
+    CancellationToken cancellationToken) => {
+
+    logger.LogInformation("Index-Miminmal API");
+
+    jobService.SendJob("Direct call", DateTime.Now.ToLongTimeString());
+
+    BackgroundJob.Enqueue(() => jobService.SendJob("Fire-and-Forget", DateTime.Now.ToLongDateString()));
+
+    BackgroundJob.Schedule(() => jobService.SendJob("Delayed Job", DateTime.Now.ToLongDateString()), TimeSpan.FromSeconds(30));
+
+    RecurringJob.AddOrUpdate("RecurJob", () => jobService.SendJob("RecurringJob", DateTime.Now.ToLongDateString()), Cron.Minutely);
+
+    var jobId = BackgroundJob.Schedule(() => jobService.SendJob("Continuation Job 1", DateTime.Now.ToLongDateString()), TimeSpan.FromSeconds(45));
+    BackgroundJob.ContinueJobWith(jobId, () => Console.WriteLine("Continuation Job 2 - Email reminder - " + DateTime.Now.ToLongDateString()));
+        
+    return TypedResults.Ok("okman");
 });
 
 app.Run();
