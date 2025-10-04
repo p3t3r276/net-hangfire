@@ -7,6 +7,8 @@ namespace TestHangleSample.Controllers;
 [Route("[controller]")]
 public class HomeController(ILogger<HomeController> logger, IJobService jobService) : Controller
 {
+    [HttpGet]
+    [Route("jobs")]
     public IActionResult Index()
     {
         logger.LogInformation("Index-HomeController");
@@ -21,7 +23,7 @@ public class HomeController(ILogger<HomeController> logger, IJobService jobServi
 
         var jobId = BackgroundJob.Schedule(() => jobService.SendJob("Continuation Job 1", DateTime.Now.ToLongTimeString()), TimeSpan.FromSeconds(45));
         BackgroundJob.ContinueJobWith(jobId, () => Console.WriteLine("Continuation Job 2 - Email reminder - " + DateTime.Now.ToLongTimeString()));
-        
+
         return Ok();
     }
 }

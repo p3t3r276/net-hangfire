@@ -1,12 +1,18 @@
 using Hangfire;
 using Hangfire.Storage.SQLite;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.OpenApi.Models;
 using Scalar.AspNetCore;
 using TestHangleSample.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddOpenApi();
+// builder.Services.AddOpenApi();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+});
 
 builder.Services.AddHangfire(config => config
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_170)
@@ -25,7 +31,12 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    // app.MapScalarApiReference();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("v1/swagger.json", "My API V1");
+    });
     app.UseHangfireDashboard();
 }
 
